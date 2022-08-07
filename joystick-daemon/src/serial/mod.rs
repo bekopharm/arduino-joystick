@@ -21,13 +21,13 @@ impl SerialConnection {
     }
 
     pub fn read_button_state(&mut self) -> Result<ButtonState, Error> {
-        const PACKET_LENGTH: usize = 12;
+        const PACKET_LENGTH: usize = 16; // was 12 (probably twice the usual length)
         let mut buffer: [u8; PACKET_LENGTH] = [0; PACKET_LENGTH];
         loop {
             match self.read_full_buffer(&mut buffer) {
                 Ok(()) => {
-                    if buffer[0] == u8::MAX && buffer[1] == u8::MAX {
-                        // start of packet marker found
+                    if buffer[0] == u8::MAX && buffer[1] == u8::MAX  {
+                        // start of packet marker (1111111111111111) found
                         return Ok(ButtonState::from_buffer(&buffer[2..]));
                     }
 
@@ -80,27 +80,36 @@ impl SerialConnection {
 }
 
 pub struct ButtonState {
-    pub pressed: [bool; 14],
+    pub pressed: [bool; 48],
     pub joysticks: [u16; 4],
 }
 
 impl ButtonState {
     fn from_buffer(buffer: &[u8]) -> ButtonState {
-        if buffer.len() != 10 {
-            panic!("Button state constructor called with incorrectly sized buffer");
+        if buffer.len() != 14 { // 14 = buffer size 16 - header size 2 byte
+            panic!("Button state constructor called with incorrectly sized buffer {}", buffer.len());
         }
 
-        let mut pressed: [bool; 14] = [false; 14];
+        let mut pressed: [bool; 48] = [false; 48];
         let mut joysticks: [u16; 4] = [0; 4];
 
-        // first 12 bits (in 2 bytes) are buttons
-        for i in 0..14 {
+        // old code did use only 14 of 16 possible bits.
+        // read first 48 bits (in 6 bytes) as buttons
+        for i in 0..48 {
             pressed[i] = (buffer[i / 8] >> (i % 8)) & 1 == 1;
+            /* // DEBUG
+            if pressed[i] {
+                println!("Button pressed: {}", (i+1));
+            }
+            */
         }
 
         // last 8 bytes are joystick positions
+        // => start with accessing 7. byte (2 bytes header was omitted already)
         for i in 0..4 {
-            joysticks[i] = buffer[2 + i * 2] as u16 + ((buffer[2 + i * 2 + 1] as u16) << 8);
+            joysticks[i] = buffer[6 + (i * 2)] as u16 + ((buffer[6 + (i * 2) + 1] as u16) << 8);
+            // DEBUG
+            // println!("Joystick {} value: {} | {:#018b}", (i+1), joysticks[i], joysticks[i]);
         }
 
         ButtonState { pressed, joysticks }
