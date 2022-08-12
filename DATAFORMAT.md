@@ -1,9 +1,10 @@
 # Start marker:
 1111111111111111
 
-# Buttons pressed (48)
+# Buttons pressed (32)
 0000000000000000
 0000000000000000
+# Rotary encoders (16, like buttons, 1 for each direction)
 0000000000000000
 
 # The state of the 4 joystick axes

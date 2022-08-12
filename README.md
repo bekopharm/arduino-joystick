@@ -8,6 +8,10 @@ My usecase is very similar. I was originally simply going to use my Arduino Mega
 
 I'm aware that this behavior can be changed by flashing the USB controller on the Mega. I'm fine with this approach though since I'm on Linux PC anyway and Gwilym Kuiper kindly provided most of the work on this already so I only had to extend the button range somewhat.
 
+# Dependencies
+
+Requires [PinChangeInterrupt](https://github.com/NicoHood/PinChangeInterrupt) v1.2.9
+
 # Building
 
 You will need the Arduino IDE to compile and upload the firmware and the Rust toolchain in order to build the driver.
